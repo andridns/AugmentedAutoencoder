@@ -13,5 +13,5 @@ from .ebo import EBO
 from .camera import Camera
 from .window import Window
 from .material import Material
-import geometry as geo
+from . import geometry as geo
 from .tiles import tiles, tiles4

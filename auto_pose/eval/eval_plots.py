@@ -21,7 +21,7 @@ def plot_reconstruction_test(sess, encoder, decoder, x):
 
     if x.dtype == 'uint8':
         x = x/255.
-        print 'converted uint8 to float type'
+        print('converted uint8 to float type')
 
     if x.ndim == 3:
         x = np.expand_dims(x, 0)
@@ -41,7 +41,7 @@ def plot_reconstruction_test_batch(sess, codebook, decoder, test_img_crops, noof
     i=0
     j=0
     while i < 16:
-        if test_img_crops[sample_views[j]].has_key(obj_id):
+        if obj_id in test_img_crops[sample_views[j]]:
             sample_batch.append(test_img_crops[sample_views[j]][obj_id][0])
             i += 1
         j += 1
@@ -50,7 +50,7 @@ def plot_reconstruction_test_batch(sess, codebook, decoder, test_img_crops, noof
     
     if x.dtype == 'uint8':
         x = x/255.
-        print 'converted uint8 to float type'
+        print('converted uint8 to float type')
     
     reconst = sess.run(decoder.x, feed_dict={encoder.x: x})
     nearest_neighbors = []
@@ -77,7 +77,7 @@ def plot_reconstruction_train(sess, decoder, train_code):
 
 
 def show_nearest_rotation(pred_views, test_crop, view):
-    print np.array(pred_views).shape 
+    print(np.array(pred_views).shape) 
     nearest_views = tiles(np.array(pred_views),1,len(pred_views),10,10)
     cv2.imshow('nearest_views',cv2.resize(nearest_views/255.,(len(pred_views)*256,256)))
     cv2.imshow('test_crop',cv2.resize(test_crop,(256,256)))
@@ -122,8 +122,8 @@ def plot_scene_with_3DBoxes(scene_res_dirs,dataset_name='tless',scene_id=1,save=
     )
 
     scene_result_dirs = sorted(glob.glob(scene_res_dirs))
-    print data_params['test_rgb_mpath']
-    print data_params['scene_gt_mpath']
+    print(data_params['test_rgb_mpath'])
+    print(data_params['scene_gt_mpath'])
 
     # for scene_id in xrange(1,21):
         # sixd_img_path = data_params['test_rgb_mpath'].format(scene_id)
@@ -131,9 +131,9 @@ def plot_scene_with_3DBoxes(scene_res_dirs,dataset_name='tless',scene_id=1,save=
     scene_infos = inout.load_info(data_params['scene_info_mpath'].format(scene_id))
 
     scene_dirs = [d for d in scene_result_dirs if '%02d' % scene_id == d.split('/')[-1]]
-    print scene_dirs
+    print(scene_dirs)
 
-    for view in xrange(len(scene_infos)):
+    for view in range(len(scene_infos)):
         sixd_img_path = data_params['test_rgb_mpath'].format(scene_id,view)
         img = cv2.imread(sixd_img_path)
         box_img = img.copy()
@@ -161,12 +161,12 @@ def plot_scene_with_3DBoxes(scene_res_dirs,dataset_name='tless',scene_id=1,save=
         for scene_dir in scene_dirs: 
             try:
                 res_path = glob.glob(os.path.join(scene_dir,'%04d_*.yml' % (view)))
-                print res_path
+                print(res_path)
                 res_path = res_path[0]
                 # print 'here', res_path
                 obj_id = int(res_path.split('_')[-1].split('.')[0])
                 results = inout.load_results_sixd17(res_path)
-                print results
+                print(results)
                 e = results['ests'][0]
                 R_est = e['R']
                 t_est = e['t']
@@ -184,7 +184,7 @@ def plot_scene_with_3DBoxes(scene_res_dirs,dataset_name='tless',scene_id=1,save=
 
                 img = lines_mask*img + lines
             except:
-                print 'undeteceted obj: ', scene_dir
+                print('undeteceted obj: ', scene_dir)
         cv2.imshow('',img)
         if cv2.waitKey(1) == 32:
             cv2.waitKey(0)
@@ -230,7 +230,7 @@ def plot_scene_with_estimate(test_img,renderer,K_test, R_est_old, t_est_old,R_es
     xmax = int(test_bb[0]+test_bb[2])
     ymax = int(test_bb[1]+test_bb[3])
 
-    print 'here'
+    print('here')
     obj_in_scene, _ = renderer.render( obj_id=0, W=test_img.shape[1],H=test_img.shape[0], K=K_test.copy(), R=R_est_old, t=np.array(t_est_old),near=10,far=10000,random_light=False)
     scene_view = test_img.copy()
     scene_view[obj_in_scene > 0] = obj_in_scene[obj_in_scene > 0]
@@ -323,7 +323,7 @@ def plot_t_err_hist2(t_errors, eval_dir, bins=15):
     bounds = np.linspace(0,100,bins+1)
     bin_count = []
     eucl_terr = np.linalg.norm(t_errors,axis=1)
-    for idx in xrange(bins):
+    for idx in range(bins):
         bin_idcs = np.where((eucl_terr>bounds[idx]) & (eucl_terr<bounds[idx+1]))
         bin_count.append(len(bin_idcs[0]))
     middle_bin = bounds[:-1] + (bounds[1]-bounds[0])/2.
@@ -338,7 +338,7 @@ def plot_R_err_hist2(R_errors, eval_dir, bins=15):
     plt.ylabel('views')
     bounds = np.linspace(0,180,bins+1)
     bin_count = []
-    for idx in xrange(bins):
+    for idx in range(bins):
         bin_idcs = np.where((R_errors>bounds[idx]) & (R_errors<bounds[idx+1]))
         bin_count.append(len(bin_idcs[0]))
     middle_bin = bounds[:-1] + (bounds[1]-bounds[0])/2.
@@ -364,7 +364,7 @@ def plot_R_err_hist(eval_args, eval_dir, scene_ids):
     for scene_id in scene_ids:
         error_file_path = os.path.join(eval_dir,'error=re_ntop=%s' % top_n,'errors_{:02d}.yml'.format(scene_id))
         if not os.path.exists(error_file_path):
-            print 'WARNING: ' + error_file_path + ' not found'
+            print('WARNING: ' + error_file_path + ' not found')
             continue
         # angle_errs_dict = inout.load_yaml(error_file_path)
         # angle_errs += [angle_e['errors'].values()[0] for angle_e in angle_errs_dict]
@@ -373,13 +373,13 @@ def plot_R_err_hist(eval_args, eval_dir, scene_ids):
         visib_gts = inout.load_yaml(data_params['scene_gt_stats_mpath'].format(scene_id, 15))
         re_dict = inout.load_yaml(error_file_path)
 
-        for view in xrange(len(gts)):
+        for view in range(len(gts)):
             res = re_dict[view*top_n:(view+1)*top_n]
             for gt,visib_gt in zip(gts[view],visib_gts[view]):
                 if gt['obj_id'] == obj_id:
                     if visib_gt['visib_fract'] > 0.1:
                         for re_e in res:
-                            angle_errs += [re_e['errors'].values()[0]]
+                            angle_errs += [list(re_e['errors'].values())[0]]
 
     if len(angle_errs) == 0:
         return
@@ -400,7 +400,7 @@ def plot_R_err_hist(eval_args, eval_dir, scene_ids):
         min_angle_errs = np.empty((total_views,))
         min_angle_errs_rect = np.empty((total_views,))
 
-        for view in xrange(total_views):
+        for view in range(total_views):
             top_n_errors = angle_errs[view*top_n:(view+1)*top_n]
             if n == 1:
                 top_n_errors = top_n_errors[np.newaxis,0]
@@ -437,21 +437,21 @@ def print_trans_rot_errors(gts, obj_id, ts_est, ts_est_old, Rs_est, Rs_est_old):
             obj_gts.append(gt)
 
     min_t_err_idx = np.argmin(np.linalg.norm(np.array(t_errs),axis=1))
-    print min_t_err_idx
-    print np.array(t_errs).shape
-    print len(obj_gts)
+    print(min_t_err_idx)
+    print(np.array(t_errs).shape)
+    print(len(obj_gts))
     gt = obj_gts[min_t_err_idx].copy()   
 
     try:
-        print 'Translation Error before refinement'
-        print ts_est_old[0]-gt['cam_t_m2c'].squeeze()
-        print 'Translation Error after refinement'
-        print t_errs[min_t_err_idx]
-        print 'Rotation Error before refinement'
-        print pose_error.re(Rs_est_old[0],gt['cam_R_m2c'])
-        print 'Rotation Error after refinement'
+        print('Translation Error before refinement')
+        print(ts_est_old[0]-gt['cam_t_m2c'].squeeze())
+        print('Translation Error after refinement')
+        print(t_errs[min_t_err_idx])
+        print('Rotation Error before refinement')
+        print(pose_error.re(Rs_est_old[0],gt['cam_R_m2c']))
+        print('Rotation Error after refinement')
         R_err = pose_error.re(Rs_est[0],gt['cam_R_m2c'])
-        print R_err
+        print(R_err)
     except:
         pass
 
@@ -480,7 +480,7 @@ def plot_vsd_err_hist(eval_args, eval_dir, scene_ids):
         error_file_path = os.path.join(eval_dir,'error=vsd_ntop=%s_delta=%s_tau=%s_cost=%s' % (top_n, delta, tau, cost), 'errors_{:02d}.yml'.format(scene_id))
 
         if not os.path.exists(error_file_path):
-            print 'WARNING: ' + error_file_path + ' not found'
+            print('WARNING: ' + error_file_path + ' not found')
             continue
         gts = inout.load_gt(data_params['scene_gt_mpath'].format(scene_id))
         visib_gts = inout.load_yaml(data_params['scene_gt_stats_mpath'].format(scene_id, 15))
@@ -491,13 +491,13 @@ def plot_vsd_err_hist(eval_args, eval_dir, scene_ids):
                 if gt['obj_id'] == obj_id:
                     if visib_gt['visib_fract'] > 0.1:
                         for vsd_e in vsds:
-                            vsd_errs += [vsd_e['errors'].values()[0]]
+                            vsd_errs += [list(vsd_e['errors'].values())[0]]
 
 
     if len(vsd_errs) == 0:
         return
     vsd_errs = np.array(vsd_errs)
-    print len(vsd_errs)
+    print(len(vsd_errs))
 
     fig = plt.figure()
     ax = plt.gca()
@@ -513,7 +513,7 @@ def plot_vsd_err_hist(eval_args, eval_dir, scene_ids):
         total_views = len(vsd_errs)/top_n
         min_vsd_errs = np.empty((total_views,))
 
-        for view in xrange(total_views):
+        for view in range(total_views):
             top_n_errors = vsd_errs[view*top_n:(view+1)*top_n]
             if n == 1:
                 top_n_errors = top_n_errors[np.newaxis,0]
@@ -549,11 +549,11 @@ def plot_vsd_occlusion(eval_args, eval_dir, scene_ids, all_test_visibs, bins = 1
         error_file_path = os.path.join(eval_dir,'error=vsd_ntop=%s_delta=%s_tau=%s_cost=%s' % (top_n, delta, tau, cost), 'errors_{:02d}.yml'.format(scene_id))
 
         if not os.path.exists(error_file_path):
-            print 'WARNING: ' + error_file_path + ' not found'
+            print('WARNING: ' + error_file_path + ' not found')
             continue
 
         vsd_dict = inout.load_yaml(error_file_path)
-        all_vsd_errs += [vsd_e['errors'].values()[0] for vsd_e in vsd_dict]
+        all_vsd_errs += [list(vsd_e['errors'].values())[0] for vsd_e in vsd_dict]
 
     if len(all_vsd_errs) == 0:
         return
@@ -576,7 +576,7 @@ def plot_vsd_occlusion(eval_args, eval_dir, scene_ids, all_test_visibs, bins = 1
     total_views = len(all_vsd_errs)/top_n
     vsd_errs = np.empty((total_views,))
 
-    for view in xrange(total_views):
+    for view in range(total_views):
         top_n_errors = all_vsd_errs[view*top_n:(view+1)*top_n]
         vsd_errs[view] = top_n_errors[0]
 
@@ -584,7 +584,7 @@ def plot_vsd_occlusion(eval_args, eval_dir, scene_ids, all_test_visibs, bins = 1
     bin_vsd_errs = []
     bin_count = []
 
-    for idx in xrange(bins):
+    for idx in range(bins):
         bin_idcs = np.where((all_test_visibs>bounds[idx]) & (all_test_visibs<bounds[idx+1]))
         bin_vsd_errs.append(vsd_errs[bin_idcs])
         bin_count.append(len(bin_idcs[0]))
@@ -611,11 +611,11 @@ def plot_re_rect_occlusion(eval_args, eval_dir, scene_ids, all_test_visibs, bins
     for scene_id in scene_ids:
 
         if not os.path.exists(os.path.join(eval_dir,'error=re_ntop=%s' % top_n,'errors_{:02d}.yml'.format(scene_id))):
-            print 'WARNING: ' + os.path.join(eval_dir,'error=re_ntop=%s' % top_n,'errors_{:02d}.yml'.format(scene_id)) + ' not found'
+            print('WARNING: ' + os.path.join(eval_dir,'error=re_ntop=%s' % top_n,'errors_{:02d}.yml'.format(scene_id)) + ' not found')
             continue
 
         angle_errs_dict = inout.load_yaml(os.path.join(eval_dir,'error=re_ntop=%s' % top_n,'errors_{:02d}.yml'.format(scene_id)))
-        all_angle_errs += [angle_e['errors'].values()[0] for angle_e in angle_errs_dict]
+        all_angle_errs += [list(angle_e['errors'].values())[0] for angle_e in angle_errs_dict]
 
     if len(all_angle_errs) == 0:
         return
@@ -633,7 +633,7 @@ def plot_re_rect_occlusion(eval_args, eval_dir, scene_ids, all_test_visibs, bins
     total_views = len(all_angle_errs)/top_n
     angle_errs_rect = np.empty((total_views,))
 
-    for view in xrange(total_views):
+    for view in range(total_views):
         top_n_errors = all_angle_errs[view*top_n:(view+1)*top_n]
         angle_errs_rect[view] = np.min([top_n_errors[0], 180-top_n_errors[0]])
 
@@ -641,7 +641,7 @@ def plot_re_rect_occlusion(eval_args, eval_dir, scene_ids, all_test_visibs, bins
     bin_angle_errs = []
     bin_count = []
 
-    for idx in xrange(bins):
+    for idx in range(bins):
         bin_idcs = np.where((all_test_visibs>bounds[idx]) & (all_test_visibs<bounds[idx+1]))
         # median_angle_err[idx] = np.median(angle_errs_rect[bin_idcs])
         bin_angle_errs.append(angle_errs_rect[bin_idcs])

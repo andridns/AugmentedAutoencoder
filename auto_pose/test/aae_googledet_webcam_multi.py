@@ -62,7 +62,7 @@ def load_frozenmodel():
         with tf.Session(graph=input_graph,config=config):
             if ssd_shape == 600:
                 shape = 7326
-                print 'ssd_shape = 600 :('
+                print('ssd_shape = 600 :(')
                 exit()
             else:
                 shape = 1917
@@ -134,17 +134,17 @@ def load_frozenmodel():
 def load_labelmap():
     print('> Loading label map')
     label_map = label_map_util.load_labelmap(label_path)
-    print label_map
+    print(label_map)
     categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=num_classes, use_display_name=True)
-    print categories
+    print(categories)
     category_index = label_map_util.create_category_index(categories)
-    print category_index
+    print(category_index)
     return category_index
 
 
 def detection(detection_graph, category_index, score, expand):
     print("> Building Graph")
-    print category_index
+    print(category_index)
     # Session Config: allow seperate GPU/CPU adressing and limit memory allocation
     config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=log_device)
     config.gpu_options.allow_growth=allow_memory_growth
@@ -364,8 +364,8 @@ def detection(detection_graph, category_index, score, expand):
     fps.stop()
     video_stream.stop()
     cv2.destroyAllWindows()
-    print('> [INFO] elapsed time (total): {:.2f}'.format(fps.elapsed()))
-    print('> [INFO] approx. FPS: {:.2f}'.format(fps.fps()))
+    print(('> [INFO] elapsed time (total): {:.2f}'.format(fps.elapsed())))
+    print(('> [INFO] approx. FPS: {:.2f}'.format(fps.fps())))
 
 
 
@@ -376,7 +376,7 @@ try:
     with open("googledet_utils/googledet_config.yml", 'r') as ymlfile:
         cfg = yaml.load(ymlfile)
 except:
-    print 'no config file found'
+    print('no config file found')
     exit()
 
 
@@ -406,8 +406,8 @@ arguments = parser.parse_args()
 
 workspace_path = os.environ.get('AE_WORKSPACE_PATH')
 if workspace_path == None:
-    print 'Please define a workspace path:\n'
-    print 'export AE_WORKSPACE_PATH=/path/to/workspace\n'
+    print('Please define a workspace path:\n')
+    print('export AE_WORKSPACE_PATH=/path/to/workspace\n')
     exit(-1)
 
 
@@ -427,7 +427,7 @@ graph, score, expand = load_frozenmodel()
 category = load_labelmap()
 
 clas_k_map = {}
-for _,val in category.iteritems():
+for _,val in category.items():
     if val['name'] in aae_list:
         clas_k_map[int(val['id'])] = aae_list.index(val['name'])
 

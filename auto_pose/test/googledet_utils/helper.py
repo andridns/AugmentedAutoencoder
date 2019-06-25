@@ -15,7 +15,7 @@ import sys
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 if PY2:
-    import Queue
+    import queue
 elif PY3:
     import queue as Queue
 
@@ -79,7 +79,7 @@ class FPS2:
         self._glob_numFrames += 1
         self._local_numFrames += 1
         if self.curr_local_elapsed > self._interval:
-          print("> FPS: {}".format(self.fps_local()))
+          print(("> FPS: {}".format(self.fps_local())))
           self._local_numFrames = 0
           self._local_start = curr_time
 
@@ -114,7 +114,7 @@ class WebcamVideoStream:
         #Debug stream shape
         self.real_width = int(self.stream.get(3))
         self.real_height = int(self.stream.get(4))
-        print("> Start video stream with shape: {},{}".format(self.real_width,self.real_height))
+        print(("> Start video stream with shape: {},{}".format(self.real_width,self.real_height)))
     
     def start(self):
         # start the thread to read frames from the video stream
@@ -175,8 +175,8 @@ class SessionWorker():
 #
     def __init__(self,tag,graph,config):
         self.lock = threading.Lock()
-        self.sess_queue = Queue.Queue()
-        self.result_queue = Queue.Queue()
+        self.sess_queue = queue.Queue()
+        self.result_queue = queue.Queue()
         self.tag = tag
         t = threading.Thread(target=self.execution,args=(graph,config))
         t.setDaemon(True)

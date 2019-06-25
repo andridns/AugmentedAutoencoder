@@ -5,8 +5,8 @@ import numpy as np
 import tensorflow as tf
 import progressbar
 
-from utils import lazy_property
-import utils as u
+from .utils import lazy_property
+from . import utils as u
 
 
 class Codebook(object):
@@ -73,11 +73,15 @@ class Codebook(object):
 
 
     def auto_pose6d(self, session, x, predicted_bb, K_test, top_n, train_args, depth_pred=None, upright=False):
-        
+        """
+        predicted_bb: [x,y,w,h]
+        K_test = [
+                [cam_intr['fx'], 0, cam_intr['cx'],
+                [0, cam_intr['fy'], cam_intr['cy']]
+        ]
+        """
         idcs = self.nearest_rotation(session, x, top_n=top_n, upright=upright,return_idcs=True)
         Rs_est = self._dataset.viewsphere_for_embedding[idcs]
-
-
 
         # test_depth = f_test / f_train * render_radius * diag_bb_ratio
         K_train = np.array(eval(train_args.get('Dataset','K'))).reshape(3,3)
@@ -112,7 +116,6 @@ class Codebook(object):
             center_obj_mm_x = center_obj_x_test * z / K_test[0,0] - center_obj_x_train * render_radius / K_train[0,0]  
             center_obj_mm_y = center_obj_y_test * z / K_test[1,1] - center_obj_y_train * render_radius / K_train[1,1]  
 
-
             t_est = np.array([center_obj_mm_x, center_obj_mm_y, z])
             ts_est[i] = t_est
 
@@ -132,6 +135,73 @@ class Codebook(object):
         return (Rs_est, ts_est)
         
 
+    def auto_pose6dbb(self, session, x, predicted_bb, K_test, top_n, train_args, depth_pred=None, upright=False):
+        """
+        predicted_bb: [x,y,w,h]
+        K_test = [
+                [cam_intr['fx'], 0, cam_intr['cx'],
+                [0, cam_intr['fy'], cam_intr['cy']]
+        ]
+        """
+        idcs = self.nearest_rotation(session, x, top_n=top_n, upright=upright,return_idcs=True)
+        Rs_est = self._dataset.viewsphere_for_embedding[idcs]
+
+        # test_depth = f_test / f_train * render_radius * diag_bb_ratio
+        K_train = np.array(eval(train_args.get('Dataset','K'))).reshape(3,3)
+        render_radius = train_args.getfloat('Dataset','RADIUS')
+
+        K00_ratio = K_test[0,0] / K_train[0,0]  
+        K11_ratio = K_test[1,1] / K_train[1,1]  
+        
+        mean_K_ratio = np.mean([K00_ratio,K11_ratio])
+
+        if self.embed_obj_bbs_values is None:
+            self.embed_obj_bbs_values = session.run(self.embed_obj_bbs_var)
+        
+        bbs = self.embed_obj_bbs_values
+
+        ts_est = np.empty((top_n,3))
+        ren_w = np.empty((top_n,1))
+        ren_h = np.empty((top_n,1))
+        for i,idx in enumerate(idcs):
+
+            rendered_bb = self.embed_obj_bbs_values[idx].squeeze()
+            if depth_pred is None:
+                diag_bb_ratio = np.linalg.norm(np.float32(rendered_bb[2:])) / np.linalg.norm(np.float32(predicted_bb[2:]))
+                z = diag_bb_ratio * mean_K_ratio * render_radius
+            else:
+                z = depth_pred
+
+
+            # object center in image plane (bb center =/= object center)
+            center_obj_x_train = rendered_bb[0] + rendered_bb[2]/2. - K_train[0,2]
+            center_obj_y_train = rendered_bb[1] + rendered_bb[3]/2. - K_train[1,2]
+
+            center_obj_x_test = predicted_bb[0] + predicted_bb[2]/2 - K_test[0,2]
+            center_obj_y_test = predicted_bb[1] + predicted_bb[3]/2 - K_test[1,2]
+            
+            center_obj_mm_x = center_obj_x_test * z / K_test[0,0] - center_obj_x_train * render_radius / K_train[0,0]  
+            center_obj_mm_y = center_obj_y_test * z / K_test[1,1] - center_obj_y_train * render_radius / K_train[1,1]  
+
+            t_est = np.array([center_obj_mm_x, center_obj_mm_y, z])
+            ts_est[i] = t_est
+
+            # correcting the rotation matrix 
+            # the codebook consists of centered object views, but the test image crop is not centered
+            # we determine the rotation that preserves appearance when translating the object
+            d_alpha_x = - np.arctan(t_est[0]/t_est[2])
+            d_alpha_y = - np.arctan(t_est[1]/t_est[2])
+            R_corr_x = np.array([[1,0,0],
+                                [0,np.cos(d_alpha_y),-np.sin(d_alpha_y)],
+                                [0,np.sin(d_alpha_y),np.cos(d_alpha_y)]]) 
+            R_corr_y = np.array([[np.cos(d_alpha_x),0,-np.sin(d_alpha_x)],
+                                [0,1,0],
+                                [np.sin(d_alpha_x),0,np.cos(d_alpha_x)]]) 
+            R_corrected = np.dot(R_corr_y,np.dot(R_corr_x,Rs_est[i]))
+            Rs_est[i] = R_corrected
+            ren_w[i] = rendered_bb[2]
+            ren_h[i] = rendered_bb[3]
+        return (Rs_est, ts_est, ren_w, ren_h)
 
 
     def nearest_rotation_batch(self, session, x):
@@ -174,7 +244,7 @@ class Codebook(object):
         J = self._encoder.latent_space_size
         embedding_z = np.empty( (embedding_size, J) )
 
-        print 'Creating embedding ..'
+        print('Creating embedding ..')
 
         self._dataset.get_sprite_training_images(train_args)
 

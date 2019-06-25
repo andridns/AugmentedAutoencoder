@@ -4,9 +4,9 @@ import numpy as np
 
 from OpenGL.GL import *
 
-import gl_utils as gu
+from . import gl_utils as gu
 
-from pysixd import misc
+from .pysixd import misc
 
 class Renderer(object):
 
@@ -47,7 +47,7 @@ class Renderer(object):
                             (1, 3, GL_FLOAT, GL_FALSE, 3*4)]})
 
         sizes = [vert[0].shape[0] for vert in vert_norms]
-        offsets = [sum(sizes[:i]) for i in xrange(len(sizes))]
+        offsets = [sum(sizes[:i]) for i in range(len(sizes))]
 
         ibo = gu.IBO(sizes, np.ones(len(vert_norms)), offsets, np.zeros(len(vert_norms)))
 
@@ -157,7 +157,7 @@ class Renderer(object):
             self.set_specular_light(phong['specular'])
 
         bbs = []
-        for i in xrange(len(obj_ids)):
+        for i in range(len(obj_ids)):
             o = obj_ids[i]
             R = Rs[i]
             t = ts[i]

@@ -27,6 +27,7 @@ void main(void) {
 	mat4 u_nm = transpose(inverse(view));
 
 	vec3 v_eye_pos = P.xyz; // Vertex position in eye coords.
-	v_L = normalize(u_light_eye_pos - v_eye_pos); // Vector to the light
+	// v_L = normalize(u_light_eye_pos - v_eye_pos); // Vector to the light
+	v_L = {1, 0, 0}
 	v_normal = normalize(u_nm * vec4(normal, 1.0)).xyz; // Normal in eye coords.
 }

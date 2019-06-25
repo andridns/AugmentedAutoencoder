@@ -15,12 +15,12 @@ def load(filename):
     return mesh.vertices, mesh.normals, mesh.texturecoords[0,:,:2]
 
 def load_meshes_sixd( obj_files, vertex_tmp_store_folder , recalculate_normals=False):
-    import inout
-    hashed_file_name = hashlib.md5( ''.join(obj_files) + 'load_meshes_sixd' + str(recalculate_normals)).hexdigest() + '.npy'
+    from . import inout
+    hashed_file_name = hashlib.md5( (''.join(obj_files) + 'load_meshes_sixd' + str(recalculate_normals)).encode('utf-8')).hexdigest() + '.npy'
 
     out_file = os.path.join( vertex_tmp_store_folder, hashed_file_name)
     if os.path.exists(out_file):
-        return np.load(out_file)
+        return np.load(out_file, encoding='bytes')
     else:
         bar = progressbar.ProgressBar()
         attributes = []
@@ -42,11 +42,11 @@ def load_meshes_sixd( obj_files, vertex_tmp_store_folder , recalculate_normals=F
 
 
 def load_meshes(obj_files, vertex_tmp_store_folder, recalculate_normals=False):
-    hashed_file_name = hashlib.md5( ''.join(obj_files) + 'load_meshes' + str(recalculate_normals) ).hexdigest() + '.npy'
+    hashed_file_name = hashlib.md5( (''.join(obj_files) + 'load_meshes' + str(recalculate_normals)).encode('utf-8') ).hexdigest() + '.npy'
 
     out_file = os.path.join( vertex_tmp_store_folder, hashed_file_name)
     if os.path.exists(out_file):
-        return np.load(out_file)
+        return np.load(out_file, encoding='bytes')
     else:
         bar = progressbar.ProgressBar()
         attributes = []
@@ -63,7 +63,7 @@ def load_meshes(obj_files, vertex_tmp_store_folder, recalculate_normals=False):
 def calc_normals(vertices):
     normals = np.empty_like(vertices)
     N = vertices.shape[0]
-    for i in xrange(0, N-1, 3):
+    for i in range(0, N-1, 3):
         v1 = vertices[i]
         v2 = vertices[i+1]
         v3 = vertices[i+2]
@@ -84,8 +84,8 @@ def sphere(x_segments, y_segments):
     normals = np.empty((N, 3), dtype=np.float32)
 
     i = 0
-    for y in xrange(y_segments+1):
-        for x in xrange(x_segments+1):
+    for y in range(y_segments+1):
+        for x in range(x_segments+1):
             xSegment = float(x) / float(x_segments)
             ySegment = float(y) / float(y_segments)
             xPos = np.cos(xSegment * 2.0 * np.pi) * np.sin(ySegment * np.pi)
@@ -99,13 +99,13 @@ def sphere(x_segments, y_segments):
 
     indices = []
     oddRow = False
-    for y in xrange(y_segments):
+    for y in range(y_segments):
         if not oddRow:
-            for x in xrange(x_segments+1):
+            for x in range(x_segments+1):
                 indices.append(y     * (x_segments + 1) + x)
                 indices.append((y+1) * (x_segments + 1) + x)
         else:
-            for x in reversed(xrange(x_segments+1)):
+            for x in reversed(range(x_segments+1)):
                 indices.append((y+1) * (x_segments + 1) + x)
                 indices.append(y     * (x_segments + 1) + x)
         oddRow = not oddRow

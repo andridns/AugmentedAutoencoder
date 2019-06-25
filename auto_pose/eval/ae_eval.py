@@ -70,7 +70,7 @@ def main():
     shutil.copy2(eval_cfg_file_path, eval_dir)
 
 
-    print eval_args
+    print(eval_args)
 
     codebook, dataset, decoder = factory.build_codebook_from_name(experiment_name, experiment_group, return_dataset = True, return_decoder = True)
     dataset.renderer
@@ -106,14 +106,14 @@ def main():
         test_imgs_depth = eval_utils.load_scenes(scene_id, eval_args, depth=True) if icp else None
 
         if estimate_bbs:
-            print eval_args.get('BBOXES','EXTERNAL')
+            print(eval_args.get('BBOXES','EXTERNAL'))
             if eval_args.get('BBOXES','EXTERNAL') == 'False':
                 bb_preds = {}
                 for i,img in enumerate(test_imgs):
-                    print img.shape
+                    print(img.shape)
                     bb_preds[i] = ssd.detectSceneBBs(img, min_score=.2, nms_threshold=.45)
                 # inout.save_yaml(os.path.join(scene_res_dir,'bb_preds.yml'), bb_preds)
-                print bb_preds
+                print(bb_preds)
             else:
                 bb_preds = inout.load_yaml(os.path.join(eval_args.get('BBOXES','EXTERNAL'),'{:02d}.yml'.format(scene_id)))
 
@@ -123,11 +123,11 @@ def main():
             test_img_crops, test_img_depth_crops, bbs, bb_scores, visibilities = eval_utils.get_gt_scene_crops(scene_id, eval_args, train_args)
 
         if len(test_img_crops) == 0:
-            print 'ERROR: object %s not in scene %s' % (obj_id,scene_id)
+            print('ERROR: object %s not in scene %s' % (obj_id,scene_id))
             exit()
 
         info = inout.load_info(data_params['scene_info_mpath'].format(scene_id))
-        Ks_test = [np.array(v['cam_K']).reshape(3,3) for v in info.values()]
+        Ks_test = [np.array(v['cam_K']).reshape(3,3) for v in list(info.values())]
 
         ######remove
         gts = inout.load_gt(data_params['scene_gt_mpath'].format(scene_id))
@@ -144,7 +144,7 @@ def main():
         if not os.path.exists(scene_res_dir):
             os.makedirs(scene_res_dir)
 
-        for view in xrange(noof_scene_views):
+        for view in range(noof_scene_views):
             try:
                 test_crops, test_crops_depth, test_bbs, test_scores, test_visibs = eval_utils.select_img_crops(test_img_crops[view][obj_id], 
                                                                                                                test_img_depth_crops[view][obj_id] if icp else None,
@@ -153,10 +153,10 @@ def main():
                                                                                                                visibilities[view][obj_id], 
                                                                                                                eval_args)
             except:
-                print 'no detections'
+                print('no detections')
                 continue
 
-            print view
+            print(view)
             preds = {}
             pred_views = []
             all_test_visibs.append(test_visibs[0])
@@ -185,14 +185,14 @@ def main():
                 # icp = False if view<350 else True
                 #TODO: 
                 Rs_est_old, ts_est_old = Rs_est.copy(), ts_est.copy()
-                for p in xrange(top_nn):
+                for p in range(top_nn):
                     if icp:
                         start = time.time()
                         # icp only along tz
                         R_est_refined, t_est_refined = icp_utils.icp_refinement(test_crops_depth[i], icp_renderer,Rs_est[p],
                             ts_est[p], Ks_test[view].copy(), (W_test, H_test),depth_only=True, max_mean_dist_factor=5.0)
-                        print ts_est[p]
-                        print t_est_refined
+                        print(ts_est[p])
+                        print(t_est_refined)
 
                         # x,y update,does not change tz:
                         _, ts_est_refined, _ = codebook.auto_pose6d(sess, test_crop, test_bb, Ks_test[view].copy(), top_nn, train_args,depth_pred=t_est_refined[2])
@@ -200,8 +200,8 @@ def main():
 
                         # rotation icp, only accepted if below 20 deg change
                         R_est_refined, _ = icp_utils.icp_refinement(test_crops_depth[i], icp_renderer,R_est_refined,t_est_refined, Ks_test[view].copy(), (W_test, H_test), no_depth=True)
-                        print Rs_est[p]
-                        print R_est_refined
+                        print(Rs_est[p])
+                        print(R_est_refined)
 
 
                         icp_time = time.time() - start

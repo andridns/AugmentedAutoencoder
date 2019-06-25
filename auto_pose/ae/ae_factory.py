@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 
-from dataset import Dataset
-from queue import Queue
-from ae import AE
-from encoder import Encoder
-from decoder import Decoder
-from codebook import Codebook
+from .dataset import Dataset
+from .queue import Queue
+from .ae import AE
+from .encoder import Encoder
+from .decoder import Decoder
+from .codebook import Codebook
 
 def build_dataset(dataset_path, args):
     dataset_args = { k:v for k,v in 
@@ -98,11 +98,11 @@ def build_codebook_from_name(experiment_name, experiment_group='', return_datase
     workspace_path = os.environ.get('AE_WORKSPACE_PATH')
 
     if workspace_path == None:
-        print 'Please define a workspace path:\n'
-        print 'export AE_WORKSPACE_PATH=/path/to/workspace\n'
+        print('Please define a workspace path:\n')
+        print('export AE_WORKSPACE_PATH=/path/to/workspace\n')
         exit(-1)
 
-    import utils as u
+    from . import utils as u
     import tensorflow as tf
 
     log_dir = u.get_log_dir(workspace_path, experiment_name, experiment_group)
@@ -114,7 +114,53 @@ def build_codebook_from_name(experiment_name, experiment_group='', return_datase
         args = configparser.ConfigParser()
         args.read(cfg_file_path)
     else:
-        print 'ERROR: Config File not found: ', cfg_file_path
+        print('ERROR: Config File not found: ', cfg_file_path)
+        exit()
+
+    with tf.variable_scope(experiment_name):
+        dataset = build_dataset(dataset_path, args)
+        x = tf.placeholder(tf.float32, [None,] + list(dataset.shape))
+        encoder = build_encoder(x, args)
+        codebook = build_codebook(encoder, dataset, args)
+        if return_decoder:
+            reconst_target = tf.placeholder(tf.float32, [None,] + list(dataset.shape))
+            decoder = build_decoder(reconst_target, encoder, args)
+
+    if return_dataset:
+        if return_decoder:
+            return codebook, dataset, decoder
+        else:
+            return codebook, dataset
+    else:
+        return codebook
+
+def build_mb_codebook(log_dir, experiment_name="my_autoencoder", return_dataset=False, return_decoder = False):
+    #print "building megablock codebook"
+    import os
+    import configparser
+    workspace_path = os.environ.get('AE_WORKSPACE_PATH')
+
+    if workspace_path == None:
+        print('Please define a workspace path:\n')
+        print('export AE_WORKSPACE_PATH=/path/to/workspace\n')
+        exit(-1)
+
+    from . import utils as u
+    import tensorflow as tf
+    #experiment_name = "my_autoencoder"
+    checkpoint_file = u.get_checkpoint_basefilename(log_dir)
+    cfg_file_path = u.get_train_config_exp_file_path(log_dir, experiment_name)
+    dataset_path = u.get_dataset_path(workspace_path)
+    print("checkpoint_file: ", checkpoint_file)
+    print("cfg_file_path: ", cfg_file_path)
+    print("dataset_path: ", dataset_path)
+
+    if os.path.exists(cfg_file_path):
+        args = configparser.ConfigParser()
+        args.read(cfg_file_path)
+
+    else:
+        print('ERROR: Config File not found: ', cfg_file_path)
         exit()
 
     with tf.variable_scope(experiment_name):
@@ -145,15 +191,16 @@ def restore_checkpoint(session, saver, ckpt_dir, at_step=None):
     if chkpt and chkpt.model_checkpoint_path:
         if at_step is None:
             saver.restore(session, chkpt.model_checkpoint_path)
+            print('restoring' , chkpt.model_checkpoint_path)
         else:
             for ckpt_path in chkpt.all_model_checkpoint_paths:
                 
                 if str(at_step) in str(ckpt_path):
                     saver.restore(session, ckpt_path)
-                    print 'restoring' , os.path.basename(ckpt_path)
+                    print('restoring' , os.path.basename(ckpt_path))
     else:
-        print 'No checkpoint found. Expected one in:\n'
-        print '{}\n'.format(ckpt_dir)
+        print('No checkpoint found. Expected one in:\n')
+        print('{}\n'.format(ckpt_dir))
         exit(-1)
 
         
